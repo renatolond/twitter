@@ -21,37 +21,10 @@ module Twitter
       #   https://dev.twitter.com/rest/media/uploading-media for details.
       #   Possible values include tweet_image, tweet_gif, and tweet_video.
       def upload(file, options = {})
-        if file.size < CHUNKED_UPLOAD_THRESHOLD
-          upload_media_simple(file, options)
-        else
-          upload_media_chunked(file, options)
-        end
+        upload_media_chunked(file, options)
       end
 
     private
-
-      # Upload a media file to twitter in one request
-      #
-      # @see https://dev.twitter.com/rest/reference/post/media/upload.html
-      # @note This is only for small files, use the chunked upload for larger ones.
-      # @rate_limited Yes
-      # @authentication Requires user context
-      # @raise [Twitter::Error::Unauthorized] Error raised when supplied user credentials are not valid.
-      # @return [Integer] The media_id of the uploaded file.
-      # @param file [File] An image file (PNG, JPEG or GIF).
-      # @option options [String] :media_category Category with which to
-      #   identify media upload. When this is specified, it enables async
-      #   processing which allows larger uploads. See
-      #   https://dev.twitter.com/rest/media/uploading-media for details.
-      #   Possible values include tweet_image, tweet_gif, and tweet_video.
-      def upload_media_simple(file, options = {})
-        Twitter::REST::Request.new(self,
-                                   :multipart_post,
-                                   'https://upload.twitter.com/1.1/media/upload.json',
-                                   key: :media,
-                                   file: file,
-                                   **options).perform[:media_id]
-      end
 
       # Upload a media file to twitter in chunks
       #
