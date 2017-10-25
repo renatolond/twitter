@@ -16,6 +16,9 @@ Metrics/MethodLength:
 
 Metrics/ModuleLength:
   Max: 150 # TODO: Lower to 100
+  Exclude:
+     - "**/*_spec.rb"
+     - "**/*_examples.rb"
 
 Metrics/ParameterLists:
   Max: 4
