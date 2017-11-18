@@ -32,7 +32,12 @@ module Twitter
 
       # @return [Array, Hash]
       def perform
-        options_key = @request_method == :get ? :params : :form
+        options_key = :form
+        options_key = :params if @request_method == :get
+        if @request_method == :post_with_json
+          options_key = :json
+          @request_method = :post
+        end
         response = http_client.headers(@headers).public_send(@request_method, @uri.to_s, options_key => @options)
         response_body = response.body.empty? ? '' : symbolize_keys!(response.parse)
         response_headers = response.headers
@@ -57,6 +62,9 @@ module Twitter
           merge_multipart_file!(options)
           @request_method = :post
           @headers = Twitter::Headers.new(@client, @request_method, @uri).request_headers
+        elsif request_method == :post_with_json
+          @request_method = request_method
+          @headers = Twitter::Headers.new(@client, :post, @uri, {}).request_headers
         else
           @request_method = request_method
           @headers = Twitter::Headers.new(@client, @request_method, @uri, options).request_headers

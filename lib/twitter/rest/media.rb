@@ -24,6 +24,10 @@ module Twitter
         upload_media_chunked(file, options)
       end
 
+      def create_metadata(media_id, options)
+        Twitter::REST::Request.new(self, :post_with_json, '/1.1/media/metadata/create.json', options.merge({'media_id': media_id})).perform
+      end
+
     private
 
       # Upload a media file to twitter in chunks
