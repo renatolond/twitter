@@ -1,5 +1,6 @@
 require 'memoizable'
 require 'twitter/entity/hashtag'
+require 'twitter/entity/permalink'
 require 'twitter/entity/symbol'
 require 'twitter/entity/uri'
 require 'twitter/entity/user_mention'
@@ -62,6 +63,11 @@ module Twitter
     end
     memoize :uris
     alias urls uris
+
+    def quoted_status_permalink
+      Entity::Permalink.new(@attrs.fetch(:quoted_status_permalink)) if @attrs.fetch(:quoted_status_permalink)
+    end
+    memoize :quoted_status_permalink
 
     # @return [Boolean]
     def uris?
