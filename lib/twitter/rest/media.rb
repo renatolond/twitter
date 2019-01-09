@@ -4,9 +4,6 @@ module Twitter
       # Maximum number of times to poll twitter for upload status
       MAX_STATUS_CHECKS = 20
 
-      # Use chunked uploading if file size is greater than 5MB
-      CHUNKED_UPLOAD_THRESHOLD = (5 * 1024 * 1024)
-
       # Upload a media file to twitter
       #
       # @see https://dev.twitter.com/rest/reference/post/media/upload.html
@@ -25,7 +22,7 @@ module Twitter
       end
 
       def create_metadata(media_id, options)
-        Twitter::REST::Request.new(self, :post_with_json, '/1.1/media/metadata/create.json', options.merge({'media_id': media_id})).perform
+        Twitter::REST::Request.new(self, :json_post, '/1.1/media/metadata/create.json', options.merge({'media_id': media_id})).perform
       end
 
     private

@@ -28,17 +28,12 @@ module Twitter
         set_multipart_options!(request_method, options)
         @path = uri.path
         @options = options
+        @options_key = {get: :params, json_post: :json, delete: :params}[request_method] || :form
       end
 
       # @return [Array, Hash]
       def perform
-        options_key = :form
-        options_key = :params if @request_method == :get
-        if @request_method == :post_with_json
-          options_key = :json
-          @request_method = :post
-        end
-        response = http_client.headers(@headers).public_send(@request_method, @uri.to_s, options_key => @options)
+        response = http_client.headers(@headers).public_send(@request_method, @uri.to_s, @options_key => @options)
         response_body = response.body.empty? ? '' : symbolize_keys!(response.parse)
         response_headers = response.headers
         fail_or_return_response_body(response.code, response_body, response_headers)
@@ -51,27 +46,24 @@ module Twitter
         file = options.delete(:file)
 
         options[key] = if file.is_a?(StringIO)
-                         HTTP::FormData::File.new(file, mime_type: 'video/mp4')
+                         HTTP::FormData::File.new(file, content_type: 'video/mp4')
                        else
-                         HTTP::FormData::File.new(file, filename: File.basename(file), mime_type: mime_type(File.basename(file)))
+                         HTTP::FormData::File.new(file, filename: File.basename(file), content_type: content_type(File.basename(file)))
                        end
       end
 
       def set_multipart_options!(request_method, options)
-        if request_method == :multipart_post
-          merge_multipart_file!(options)
+        if %i[multipart_post json_post].include?(request_method)
+          merge_multipart_file!(options) if request_method == :multipart_post
           @request_method = :post
           @headers = Twitter::Headers.new(@client, @request_method, @uri).request_headers
-        elsif request_method == :post_with_json
-          @request_method = request_method
-          @headers = Twitter::Headers.new(@client, :post, @uri, {}).request_headers
         else
           @request_method = request_method
           @headers = Twitter::Headers.new(@client, @request_method, @uri, options).request_headers
         end
       end
 
-      def mime_type(basename)
+      def content_type(basename)
         case basename
         when /\.gif$/i
           'image/gif'
@@ -116,7 +108,7 @@ module Twitter
             object[index] = symbolize_keys!(val)
           end
         elsif object.is_a?(Hash)
-          object.keys.each do |key|
+          object.dup.each_key do |key|
             object[key.to_sym] = symbolize_keys!(object.delete(key))
           end
         end
